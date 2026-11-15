@@ -141,6 +141,8 @@ Existujúce URL sa nemenia. Prepnutie jazyka zachová aktuálnu stránku, hash a
 - `scripts/validate.ts` kontroluje štruktúru, metadata, slajdy a Python ukážky.
 - `scripts/render-presentations.mjs` renderuje PPTX do obrázkov pre webový viewer.
 - `shared/i18n.ts` obsahuje jazykový model, shared UI preklady a centrálne anglické názvy týždňov.
+- `web/src/components/PythonPlayground.astro` je editor na spúšťanie Pythonu priamo v cvičení (Pyodide, pozri `docs/architecture.md`).
+- `exercises/exercise-XX/playground/` obsahuje začiatočný kód editorov (`task_YY.sk.py`, `task_YY.en.py`).
 - `docs/` dokumentuje rozhodnutia a workflow.
 
 ## Verejné stránky

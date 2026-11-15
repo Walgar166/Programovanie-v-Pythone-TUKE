@@ -1,0 +1,406 @@
+---
+// In-browser Python editor for one exercise task.
+// Usage inside a worksheet task: <PythonPlayground exercise="01" task="03" />
+// Starter code: exercises/exercise-XX/playground/task_YY.{sk,en}.py
+// Optional solution (adds the "Show solution" button): solution_YY.{sk,en}.py
+import { highlightPythonLines } from "../lib/python-runner/python-syntax";
+import { getPlaygroundSolution, getPlaygroundStarter } from "../lib/python-runner/sources";
+import CopyCodeBlock from "./CopyCodeBlock.astro";
+import LocalizedText from "./LocalizedText.astro";
+
+type Props = {
+  exercise: string;
+  task: string;
+};
+
+const { exercise, task } = Astro.props;
+const starter = getPlaygroundStarter(exercise, task);
+const solution = getPlaygroundSolution(exercise, task);
+const id = `exercise-${exercise}-task-${task}`;
+---
+
+<div
+  class="playground"
+  data-python-playground
+  data-playground-id={id}
+  data-storage-key={`python-course.exercise.${exercise}.task.${task}.code`}
+>
+  <div class="playground__header">
+    <h3 id={`${id}-playground`}><LocalizedText sk="Python online editor" en="Online Python editor" /></h3>
+    <span class="playground__status" data-playground-status role="status" aria-live="polite"></span>
+  </div>
+  <p class="playground__note-text">
+    <LocalizedText
+      sk="Riešenie úlohy píšte priamo do tohto editora a spustite ho tlačidlom Spustiť."
+      en="Write your solution directly in this editor and run it with the Run button."
+    />
+  </p>
+
+  <div class="playground__code">
+    <pre class="playground__gutter" data-playground-gutter aria-hidden="true"></pre>
+    <div class="playground__area">
+      <pre class="playground__highlight" aria-hidden="true"><code data-playground-highlight></code></pre>
+      <textarea
+        class="playground__editor"
+        data-playground-editor
+        aria-labelledby={`${id}-playground`}
+        spellcheck="false"
+        autocapitalize="off"
+        autocomplete="off"
+        wrap="off">{starter.sk}</textarea>
+    </div>
+  </div>
+
+  <div class="playground__actions">
+    <button type="button" class="playground__run" data-playground-run data-i18n-key="playground.run">Spustiť</button>
+    <button type="button" data-playground-stop data-i18n-key="playground.stop" hidden>Zastaviť</button>
+    <button type="button" data-playground-reset data-i18n-key="playground.reset">Obnoviť pôvodný kód</button>
+    <span class="playground__shortcut" data-i18n-key="playground.shortcut">Ctrl + Enter spustí kód</span>
+    {
+      solution && (
+        <button
+          type="button"
+          class="playground__solution-toggle"
+          data-playground-solution-toggle
+          aria-controls={`${id}-solution`}
+          aria-expanded="false"
+          data-i18n-key="playground.showSolution"
+        >
+          Zobraziť riešenie
+        </button>
+      )
+    }
+  </div>
+
+  <pre class="playground__output" data-playground-output aria-live="polite" hidden></pre>
+
+  {
+    solution && (
+      <div class="playground__solution" id={`${id}-solution`} data-playground-solution hidden>
+        <h4>
+          <LocalizedText sk="Vzorové riešenie" en="Sample solution" />
+        </h4>
+        <div data-lang="sk">
+          <CopyCodeBlock code={solution.sk} html={highlightPythonLines(solution.sk)} />
+        </div>
+        <div data-lang="en" hidden>
+          <CopyCodeBlock code={solution.en} html={highlightPythonLines(solution.en)} />
+        </div>
+      </div>
+    )
+  }
+
+  <script type="application/json" data-playground-starter set:html={JSON.stringify(starter)}></script>
+</div>
+
+<script>
+  import { highlightPython } from "../lib/python-runner/python-syntax";
+  import { getPythonRunner, type RunResult } from "../lib/python-runner/runner";
+
+  type Language = "sk" | "en";
+  type I18nApi = {
+    language: Language;
+    t: (key: string, values?: Record<string, string | number>) => string;
+  };
+
+  const INDENT = "    ";
+  const runner = getPythonRunner();
+
+  function i18n() {
+    return (window as Window & { pythonCourseI18n?: I18nApi }).pythonCourseI18n;
+  }
+
+  function currentLanguage(): Language {
+    return i18n()?.language ?? (document.documentElement.lang === "en" ? "en" : "sk");
+  }
+
+  function t(key: string, values?: Record<string, string | number>) {
+    return i18n()?.t(key, values) ?? key;
+  }
+
+  function readStorage(key: string) {
+    try {
+      return window.localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+
+  function writeStorage(key: string, value: string | null) {
+    try {
+      if (value === null) window.localStorage.removeItem(key);
+      else window.localStorage.setItem(key, value);
+    } catch {
+      // Saved drafts are a local convenience; the editor works without storage.
+    }
+  }
+
+  /** Sets a translated message that the I18nController re-translates after a language switch. */
+  function setTranslated(element: HTMLElement, key: string, values?: Record<string, string | number>) {
+    element.dataset.i18nKey = key;
+    if (values) element.dataset.i18nValues = JSON.stringify(values);
+    else delete element.dataset.i18nValues;
+    element.textContent = t(key, values);
+  }
+
+  function clearTranslated(element: HTMLElement) {
+    delete element.dataset.i18nKey;
+    delete element.dataset.i18nValues;
+    element.textContent = "";
+  }
+
+  function lineStart(value: string, position: number) {
+    return value.lastIndexOf("\n", position - 1) + 1;
+  }
+
+  /** Replaces a range through execCommand when possible so the browser keeps native undo history. */
+  function replaceRange(editor: HTMLTextAreaElement, start: number, end: number, text: string, selectStart: number, selectEnd: number) {
+    editor.focus();
+    editor.setSelectionRange(start, end);
+    const inserted = typeof document.execCommand === "function" && document.execCommand("insertText", false, text);
+    if (!inserted) {
+      editor.setRangeText(text, start, end, "end");
+      editor.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    editor.setSelectionRange(selectStart, selectEnd);
+  }
+
+  function indentSelection(editor: HTMLTextAreaElement, outdent: boolean) {
+    const { value, selectionStart, selectionEnd } = editor;
+    const singleCaret = selectionStart === selectionEnd;
+
+    if (singleCaret && !outdent) {
+      replaceRange(editor, selectionStart, selectionEnd, INDENT, selectionStart + INDENT.length, selectionStart + INDENT.length);
+      return;
+    }
+
+    const blockStart = lineStart(value, selectionStart);
+    const blockEnd = selectionEnd > selectionStart && value[selectionEnd - 1] === "\n" ? selectionEnd - 1 : selectionEnd;
+    const lines = value.slice(blockStart, blockEnd).split("\n");
+    let firstLineShift = 0;
+    let totalShift = 0;
+
+    const changed = lines.map((line, index) => {
+      let shift: number;
+      let next: string;
+      if (outdent) {
+        const removable = line.match(/^ {1,4}|^\t/)?.[0].length ?? 0;
+        next = line.slice(removable);
+        shift = -removable;
+      } else {
+        next = INDENT + line;
+        shift = INDENT.length;
+      }
+      if (index === 0) firstLineShift = shift;
+      totalShift += shift;
+      return next;
+    });
+
+    const nextStart = Math.max(blockStart, selectionStart + firstLineShift);
+    const nextEnd = singleCaret ? nextStart : selectionEnd + totalShift;
+    replaceRange(editor, blockStart, blockEnd, changed.join("\n"), nextStart, nextEnd);
+  }
+
+  function insertNewline(editor: HTMLTextAreaElement) {
+    const { value, selectionStart, selectionEnd } = editor;
+    const currentLine = value.slice(lineStart(value, selectionStart), selectionStart);
+    let indent = currentLine.match(/^[ \t]*/)?.[0] ?? "";
+    if (/:\s*(#.*)?$/.test(currentLine)) indent += INDENT;
+    const text = `\n${indent}`;
+    const caret = selectionStart + text.length;
+    replaceRange(editor, selectionStart, selectionEnd, text, caret, caret);
+  }
+
+  function setupPlayground(root: HTMLElement) {
+    const editor = root.querySelector<HTMLTextAreaElement>("[data-playground-editor]");
+    const runButton = root.querySelector<HTMLButtonElement>("[data-playground-run]");
+    const stopButton = root.querySelector<HTMLButtonElement>("[data-playground-stop]");
+    const resetButton = root.querySelector<HTMLButtonElement>("[data-playground-reset]");
+    const status = root.querySelector<HTMLElement>("[data-playground-status]");
+    const output = root.querySelector<HTMLPreElement>("[data-playground-output]");
+    const starterSource = root.querySelector<HTMLScriptElement>("[data-playground-starter]");
+    const gutter = root.querySelector<HTMLElement>("[data-playground-gutter]");
+    const highlight = root.querySelector<HTMLElement>("[data-playground-highlight]");
+    const highlightLayer = highlight?.parentElement;
+    const solutionToggle = root.querySelector<HTMLButtonElement>("[data-playground-solution-toggle]");
+    const solutionPanel = root.querySelector<HTMLElement>("[data-playground-solution]");
+    if (!editor || !runButton || !stopButton || !resetButton || !status || !output || !starterSource || !gutter || !highlight || !highlightLayer) return;
+
+    const owner = root.dataset.playgroundId ?? "";
+    const storageKey = root.dataset.storageKey ?? "";
+    const starter = JSON.parse(starterSource.textContent ?? "{}") as Record<Language, string>;
+    const isStarter = (code: string) => code === starter.sk || code === starter.en;
+    let saveTimer: number | undefined;
+    let escapePressed = false;
+
+    let gutterLines = 0;
+
+    // The textarea text is transparent; the coloured layer and the line numbers
+    // underneath it are redrawn on input and follow the textarea's scroll position.
+    const syncScroll = () => {
+      gutter.scrollTop = editor.scrollTop;
+      highlightLayer.scrollTop = editor.scrollTop;
+      highlightLayer.scrollLeft = editor.scrollLeft;
+    };
+
+    const updateView = () => {
+      const lines = editor.value.split("\n").length;
+      if (lines !== gutterLines) {
+        gutterLines = lines;
+        gutter.textContent = Array.from({ length: lines }, (_, index) => index + 1).join("\n");
+      }
+      // A trailing newline needs a visible character, otherwise the last empty line collapses.
+      highlight.innerHTML = `${highlightPython(editor.value)}\n `;
+      syncScroll();
+    };
+
+    const setCode = (code: string) => {
+      editor.value = code;
+      updateView();
+    };
+
+    setCode(readStorage(storageKey) ?? starter[currentLanguage()]);
+
+    const saveDraft = () => {
+      writeStorage(storageKey, isStarter(editor.value) ? null : editor.value);
+    };
+
+    const syncButtons = () => {
+      const ownsRun = runner.activeOwner === owner;
+      runButton.hidden = ownsRun;
+      stopButton.hidden = !ownsRun;
+      // One interpreter serves the whole page, so only one program can run at a time.
+      runButton.disabled = runner.state === "loading" || (runner.state === "running" && !ownsRun);
+    };
+
+    const appendOutput = (stream: "stdout" | "stderr", text: string) => {
+      const last = output.lastElementChild as HTMLElement | null;
+      if (last && last.dataset.stream === stream) {
+        last.textContent += text;
+        return;
+      }
+      const chunk = document.createElement("span");
+      chunk.dataset.stream = stream;
+      if (stream === "stderr") chunk.className = "playground__stderr";
+      chunk.textContent = text;
+      output.append(chunk);
+    };
+
+    const appendNote = (key: string) => {
+      const note = document.createElement("span");
+      note.className = "playground__note";
+      setTranslated(note, key);
+      output.append(note);
+    };
+
+    const showResult = (result: RunResult) => {
+      if (result.status === "ok" || result.status === "error") {
+        if (!output.textContent) appendNote("playground.noOutput");
+        setTranslated(status, result.status === "ok" ? "playground.finished" : "playground.failed");
+        status.dataset.state = result.status;
+      } else if (result.status === "stopped") {
+        appendNote("playground.stoppedNote");
+        setTranslated(status, "playground.stopped");
+        status.dataset.state = "error";
+      } else if (result.message !== "busy") {
+        setTranslated(status, "playground.loadError");
+        status.dataset.state = "error";
+        output.hidden = true;
+      } else {
+        clearTranslated(status);
+      }
+    };
+
+    const run = async () => {
+      if (runner.state === "loading" || runner.state === "running") return;
+      saveDraft();
+      output.replaceChildren();
+      output.hidden = false;
+      status.dataset.state = "";
+      setTranslated(status, runner.state === "ready" ? "playground.running" : "playground.loading");
+      syncButtons();
+
+      const result = await runner.run(owner, editor.value, t("playground.inputUnsupported"), {
+        onOutput: appendOutput,
+        onTruncated: () => appendNote("playground.truncated")
+      });
+      showResult(result);
+      syncButtons();
+    };
+
+    runButton.addEventListener("click", () => void run());
+    stopButton.addEventListener("click", () => runner.stop());
+
+    resetButton.addEventListener("click", () => {
+      const fresh = starter[currentLanguage()];
+      if (editor.value === fresh) return;
+      if (!isStarter(editor.value) && !window.confirm(t("playground.resetConfirm"))) return;
+      setCode(fresh);
+      writeStorage(storageKey, null);
+    });
+
+    solutionToggle?.addEventListener("click", () => {
+      if (!solutionPanel) return;
+      const open = solutionPanel.hidden;
+      solutionPanel.hidden = !open;
+      solutionToggle.setAttribute("aria-expanded", String(open));
+      setTranslated(solutionToggle, open ? "playground.hideSolution" : "playground.showSolution");
+    });
+
+    editor.addEventListener("focus", () => runner.preload(), { once: true });
+
+    editor.addEventListener("scroll", syncScroll);
+
+    editor.addEventListener("input", () => {
+      updateView();
+      window.clearTimeout(saveTimer);
+      saveTimer = window.setTimeout(saveDraft, 400);
+    });
+
+    editor.addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        event.preventDefault();
+        void run();
+        return;
+      }
+
+      // Escape releases Tab so keyboard users can leave the editor.
+      if (event.key === "Escape") {
+        escapePressed = true;
+        return;
+      }
+
+      if (event.key === "Tab" && !escapePressed && !event.altKey && !event.ctrlKey && !event.metaKey) {
+        event.preventDefault();
+        indentSelection(editor, event.shiftKey);
+        return;
+      }
+
+      if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+        event.preventDefault();
+        insertNewline(editor);
+      }
+
+      escapePressed = false;
+    });
+
+    editor.addEventListener("blur", () => {
+      escapePressed = false;
+    });
+
+    // An untouched starter follows the page language; edited code is never replaced.
+    window.addEventListener("python-course-language-change", () => {
+      if (!isStarter(editor.value)) return;
+      setCode(starter[currentLanguage()]);
+    });
+
+    runner.addEventListener("statechange", syncButtons);
+    syncButtons();
+  }
+
+  document.querySelectorAll<HTMLElement>("[data-python-playground]").forEach((root) => {
+    if (root.dataset.playgroundReady === "true") return;
+    root.dataset.playgroundReady = "true";
+    setupPlayground(root);
+  });
+</script>

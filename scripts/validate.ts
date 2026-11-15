@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { exercises } from "../shared/exercises";
 import { presentations } from "../shared/presentations";
@@ -163,6 +164,34 @@ function validatePythonExampleFiles() {
         errors.push(`${filePath}: py_compile sa nedá spustiť (${result.error.message})`);
       } else if (result.status !== 0) {
         errors.push(`${filePath}: py_compile zlyhal\n${result.stderr || result.stdout}`);
+      }
+    }
+  }
+
+  validatePlaygroundFiles(python);
+}
+
+// Code of the in-browser editors (exercises/*/playground/) is shown to students as runnable,
+// so starters and sample solutions must not only parse but also run without an exception.
+function validatePlaygroundFiles(python: PythonCommand) {
+  const exercisesRoot = path.join(process.cwd(), "exercises");
+  if (!fs.existsSync(exercisesRoot)) return;
+
+  for (const entry of fs.readdirSync(exercisesRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+
+    for (const filePath of findFiles(path.join(exercisesRoot, entry.name, "playground"), ".py")) {
+      const result = spawnSync(python.command, [...python.args, "-I", filePath], {
+        cwd: os.tmpdir(),
+        encoding: "utf8",
+        timeout: 10000,
+        env: { ...process.env, PYTHONIOENCODING: "utf-8" }
+      });
+
+      if (result.error) {
+        errors.push(`${filePath}: spustenie zlyhalo (${result.error.message})`);
+      } else if (result.status !== 0) {
+        errors.push(`${filePath}: kód editora skončil chybou\n${result.stderr || result.stdout}`);
       }
     }
   }

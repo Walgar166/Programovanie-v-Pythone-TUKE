@@ -1,6 +1,7 @@
 ---
 import { getExerciseBySlug } from "@shared/exercises";
 import LocalizedText from "../../components/LocalizedText.astro";
+import PythonPlayground from "../../components/PythonPlayground.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 const exercise = getExerciseBySlug("01-uvod-ku-pythonu-v-praxi");
@@ -29,12 +30,14 @@ const descriptionEn = exercise.translations?.en?.description ?? exercise.descrip
 Odporúčané: virtuálne prostredie
 Externé knižnice: nie
 Odovzdávané súbory: vlastné .py súbory podľa úloh`}</code></pre>
+        <p>Každá úloha má na konci Python online editor, do ktorého píšete riešenie a spúšťate ho priamo na stránke. Beží v prehliadači cez Pyodide, teda CPython skompilovaný do WebAssembly, a nič sa neodosiela na server. Prvé spustenie stiahne interpreter, preto chvíľu trvá. Rozpracovaný kód sa ukladá iba v tomto prehliadači. Editor slúži na skúšanie; odovzdávajú sa vlastné <code>.py</code> súbory.</p>
       </div>
       <div data-lang="en" hidden>
         <pre class="expected-output"><code>{`Python 3.x
 Recommended: virtual environment
 External libraries: no
 Submitted files: your own .py files for the tasks`}</code></pre>
+        <p>Each task ends with an online Python editor where you write your solution and run it directly on the page. It runs in the browser through Pyodide, which is CPython compiled to WebAssembly, and nothing is sent to a server. The first run downloads the interpreter, so it takes a moment. Your draft code is stored only in this browser. The editor is for experimenting; you still submit your own <code>.py</code> files.</p>
       </div>
     </section>
 
@@ -118,6 +121,7 @@ courses["Python"]: ["Anna", "Peter"]
 backup["Python"]: ["Anna", "Peter", "Martin"]`}</code></pre>
         <p class="hint"><strong>Hint:</strong> A shallow dictionary copy is not enough when dictionary values are mutable objects.</p>
       </div>
+      <PythonPlayground exercise="01" task="01" />
     </section>
 
     <section class="worksheet-task">
@@ -145,7 +149,7 @@ backup["Python"]: ["Anna", "Peter", "Martin"]`}</code></pre>
         <p>Pri návrhu riešenia použite vhodne <code>set</code>, <code>dict</code>, iteráciu a sorting. Nemusíte všetko natlačiť do jednej comprehension.</p>
         <pre class="expected-output"><code>{`Kategórie: electronics, furniture, office
 Vypredané: mouse, desk
-Hodnota skladu: 1015.10
+Hodnota skladu: 1002.60
 Najdrahší dostupný produkt: monitor
 
 Hodnota podľa kategórie:
@@ -176,7 +180,7 @@ office: 96.00`}</code></pre>
         <p>Use <code>set</code>, <code>dict</code>, iteration and sorting where they fit. You do not need to force everything into one comprehension.</p>
         <pre class="expected-output"><code>{`Categories: electronics, furniture, office
 Sold out: mouse, desk
-Inventory value: 1015.10
+Inventory value: 1002.60
 Most expensive available product: monitor
 
 Value by category:
@@ -184,6 +188,7 @@ electronics: 757.60
 furniture: 149.00
 office: 96.00`}</code></pre>
       </div>
+      <PythonPlayground exercise="01" task="02" />
     </section>
 
     <section class="worksheet-task">
@@ -248,6 +253,7 @@ Most active user: anna
 ERROR records: 3`}</code></pre>
         <p class="hint"><strong>Hint:</strong> The line has a stable shape. Split it with <code>split()</code> and process parts such as <code>user=anna</code> separately.</p>
       </div>
+      <PythonPlayground exercise="01" task="03" />
     </section>
 
     <section class="worksheet-task">
@@ -315,6 +321,7 @@ passed.reverse()`}</code></pre>
         </ul>
         <p>At the end, briefly write down at least three concrete improvements you made.</p>
       </div>
+      <PythonPlayground exercise="01" task="04" />
     </section>
 
     <section class="worksheet-task">
@@ -383,6 +390,7 @@ eva@example.com      Eva Kralova      teacher
 lucia@example.com    Lucia Smith      user
 peter@example.com    Peter Novak      user`}</code></pre>
       </div>
+      <PythonPlayground exercise="01" task="05" />
     </section>
 
     <section class="worksheet-task">
@@ -452,6 +460,7 @@ Ranking:
 2. Anna    88.3
 3. Eva     76.7`}</code></pre>
       </div>
+      <PythonPlayground exercise="01" task="06" />
     </section>
 
     <section class="worksheet-task">
@@ -515,6 +524,7 @@ pending: 2
 cancelled: 1
 Best customer: Anna`}</code></pre>
       </div>
+      <PythonPlayground exercise="01" task="07" />
     </section>
 
     <section class="worksheet-task">
@@ -567,6 +577,7 @@ Histórie sú nezávislé: True`}</code></pre>
 grades: 1 event
 Histories are independent: True`}</code></pre>
       </div>
+      <PythonPlayground exercise="01" task="08" />
     </section>
 
     <section class="worksheet-task">
@@ -619,6 +630,7 @@ furniture: 149.00
 
 Highest inventory value: Monitor`}</code></pre>
       </div>
+      <PythonPlayground exercise="01" task="09" />
     </section>
 
     <section class="worksheet-task">
@@ -729,6 +741,7 @@ TOP 3
 3. Anna      84.3`}</code></pre>
         <p class="hint"><strong>Hint:</strong> First design 4-6 smaller functions. Handle report formatting only after that.</p>
       </div>
+      <PythonPlayground exercise="01" task="10" />
     </section>
 
     <section class="worksheet-section">

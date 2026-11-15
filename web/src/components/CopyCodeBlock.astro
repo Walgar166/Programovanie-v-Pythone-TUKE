@@ -5,11 +5,13 @@ import { highlightedCode } from "../lib/highlight";
 type Props = {
   code: string;
   language?: CodeLanguage;
+  /** Optional pre-highlighted markup made of `.code-line` spans; replaces the default highlighter. */
+  html?: string;
 };
 
 const { language = "python" } = Astro.props;
 const code = Astro.props.code.replace(/\r\n/g, "\n").replace(/\n$/, "");
-const html = highlightedCode({ language, code });
+const html = Astro.props.html ?? highlightedCode({ language, code });
 ---
 
 <div class="copy-code" data-copy-code-block>

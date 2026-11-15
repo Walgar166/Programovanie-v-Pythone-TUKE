@@ -88,7 +88,43 @@ export const uiTranslations = {
   "exercise.previousLabel": { sk: "← Cvičenie {number}", en: "← Exercise {number}" },
   "exercise.nextLabel": { sk: "Cvičenie {number} →", en: "Exercise {number} →" },
   "exercise.codeSample": { sk: "ukážka kódu", en: "code sample" },
-  "exercise.expectedOutput": { sk: "očakávaný výstup", en: "expected output" }
+  "exercise.expectedOutput": { sk: "očakávaný výstup", en: "expected output" },
+
+  "playground.run": { sk: "Spustiť", en: "Run" },
+  "playground.stop": { sk: "Zastaviť", en: "Stop" },
+  "playground.reset": { sk: "Obnoviť pôvodný kód", en: "Restore original code" },
+  "playground.resetConfirm": {
+    sk: "Obnoviť pôvodný kód? Vaše úpravy v tomto editore sa stratia.",
+    en: "Restore the original code? Your changes in this editor will be lost."
+  },
+  "playground.showSolution": { sk: "Zobraziť riešenie", en: "Show solution" },
+  "playground.hideSolution": { sk: "Skryť riešenie", en: "Hide solution" },
+  "playground.shortcut":{ sk: "Ctrl + Enter spustí kód", en: "Ctrl + Enter runs the code" },
+  "playground.loading": {
+    sk: "Načítava sa Python… Prvé spustenie môže trvať niekoľko sekúnd.",
+    en: "Loading Python… The first run may take a few seconds."
+  },
+  "playground.running": { sk: "Program beží…", en: "Running…" },
+  "playground.finished": { sk: "Program skončil", en: "Program finished" },
+  "playground.failed": { sk: "Program skončil chybou", en: "Program ended with an error" },
+  "playground.stopped": { sk: "Zastavené", en: "Stopped" },
+  "playground.stoppedNote": {
+    sk: "Program bol zastavený. Ďalšie spustenie znova načíta interpreter.",
+    en: "The program was stopped. The next run reloads the interpreter."
+  },
+  "playground.noOutput": { sk: "Program nič nevypísal.", en: "The program printed nothing." },
+  "playground.truncated": {
+    sk: "Výstup je príliš dlhý, zvyšok sa nezobrazuje.",
+    en: "The output is too long; the rest is not shown."
+  },
+  "playground.loadError": {
+    sk: "Python sa nepodarilo načítať. Skontrolujte pripojenie na internet a skúste to znova.",
+    en: "Python could not be loaded. Check your internet connection and try again."
+  },
+  "playground.inputUnsupported": {
+    sk: "input() v editore na stránke nie je podporovaný. Vstupné dáta zapíšte priamo do kódu.",
+    en: "input() is not supported in the in-page editor. Put the input data directly in the code."
+  }
 } satisfies I18nDictionary;
 
 export const weekTitleTranslations = {

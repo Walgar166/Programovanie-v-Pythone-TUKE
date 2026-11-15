@@ -9,4 +9,4 @@ Odporúčaný postup:
 3. každý `task_XX.py` spúšťaj samostatne;
 4. nenechávaj riešenie iba v komentári, píš spustiteľný kód.
 
-Súbory neobsahujú hotové riešenia. Referenčné riešenia pre vyučujúceho sú mimo verejného webu v `solutions/exercise-01/`.
+Súbory neobsahujú hotové riešenia. Priečinok `playground/` obsahuje začiatočný kód pre online editor na stránke cvičenia (`task_XX.sk.py`, `task_XX.en.py`). Referenčné riešenia pre vyučujúceho sú mimo verejného webu v `solutions/exercise-01/`.

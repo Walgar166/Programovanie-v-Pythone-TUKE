@@ -1343,6 +1343,307 @@ pre {
   color: var(--muted);
 }
 
+/* In-browser Python editor (PythonPlayground.astro) */
+.playground {
+  margin: 30px 0 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.playground__header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px 18px;
+  margin-bottom: 10px;
+}
+
+.playground__header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.playground__status {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.playground__status[data-state="ok"] {
+  color: var(--accent);
+}
+
+.playground__status[data-state="error"] {
+  color: var(--bad);
+}
+
+/* Fixed size: long code scrolls inside the editor instead of stretching the page.
+   Width follows the content column, so the editor stays responsive.
+   The gutter, the coloured layer and the textarea share font metrics and padding,
+   so line numbers and colours stay aligned with the typed text. */
+.playground__code {
+  --playground-padding: 16px 18px 16px 14px;
+  --playground-padding-top: 16px;
+  display: flex;
+  height: 420px;
+  overflow: hidden;
+  /* The accent border marks the editable area, unlike the read-only code samples. */
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--code-bg);
+  font-family: Consolas, "SFMono-Regular", monospace;
+  font-size: 0.92rem;
+  line-height: 1.52;
+}
+
+.playground__code:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.playground__gutter {
+  flex: none;
+  box-sizing: border-box;
+  min-width: 3.2em;
+  height: 100%;
+  margin: 0;
+  /* Extra bottom space lets the gutter follow the editor down to its last line. */
+  padding: var(--playground-padding-top) 10px 48px 12px;
+  overflow: hidden;
+  border: 0;
+  border-right: 1px solid var(--code-line);
+  border-radius: 0;
+  background: transparent;
+  color: rgba(220, 232, 247, 0.42);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: pre;
+  user-select: none;
+}
+
+.playground__area {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+.playground__highlight,
+.playground__editor {
+  box-sizing: border-box;
+  margin: 0;
+  padding: var(--playground-padding);
+  border: 0;
+  border-radius: 0;
+  font: inherit;
+  letter-spacing: normal;
+  tab-size: 4;
+  white-space: pre;
+}
+
+.playground__highlight {
+  position: absolute;
+  inset: 0;
+  /* Room to scroll as far as the textarea, whose scrollbars take space. */
+  padding-right: 48px;
+  padding-bottom: 48px;
+  overflow: hidden;
+  background: transparent;
+  color: var(--code-text);
+  pointer-events: none;
+}
+
+.playground__highlight code {
+  font: inherit;
+}
+
+.playground__editor {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: scroll;
+  scrollbar-color: #5b6b82 var(--code-bg);
+  outline: none;
+  background: transparent;
+  /* Text is drawn by the coloured layer underneath; only the caret and selection stay here. */
+  color: transparent;
+  caret-color: #ffffff;
+  -webkit-text-fill-color: transparent;
+  resize: none;
+}
+
+.playground__editor::selection {
+  background: rgba(120, 160, 220, 0.35);
+}
+
+.playground__note-text {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* Python syntax colours of the editor and its sample solutions (python-syntax.ts). */
+.py-keyword,
+.py-constant {
+  color: #569cd6;
+}
+
+.py-control {
+  color: #c586c0;
+}
+
+.py-builtin,
+.py-function,
+.py-decorator {
+  color: #dcdcaa;
+}
+
+.py-type {
+  color: #4ec9b0;
+}
+
+.py-string {
+  color: #ce9178;
+}
+
+.py-number {
+  color: #b5cea8;
+}
+
+.py-comment {
+  color: #6a9955;
+}
+
+.py-self {
+  color: #9cdcfe;
+}
+
+.playground__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.playground__actions button {
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.playground__actions button:hover,
+.playground__actions button:focus-visible {
+  border-color: var(--accent);
+}
+
+.playground__actions .playground__run,
+.playground__actions [data-playground-stop] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.playground__actions .playground__run:hover {
+  background: var(--accent-strong);
+}
+
+.playground__actions button:disabled {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--faint);
+  cursor: not-allowed;
+}
+
+.playground__shortcut {
+  color: var(--faint);
+  font-size: 0.85rem;
+}
+
+.playground__actions .playground__solution-toggle {
+  margin-left: auto;
+}
+
+.playground__solution {
+  margin-top: 18px;
+}
+
+.playground__solution[hidden] {
+  display: none;
+}
+
+.playground__solution h4 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.playground__solution .copy-code {
+  margin: 0;
+}
+
+.playground__solution .copy-code pre {
+  max-height: 520px;
+}
+
+.playground__output {
+  max-height: 260px;
+  margin: 14px 0 0;
+  padding: 14px 18px;
+  overflow: auto;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: Consolas, "SFMono-Regular", monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.playground__output[hidden] {
+  display: none;
+}
+
+.playground__stderr {
+  color: var(--bad);
+}
+
+.playground__note {
+  display: block;
+  color: var(--muted);
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-style: italic;
+}
+
+.playground__output > span + .playground__note {
+  margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .playground__code {
+    --playground-padding: 12px 14px 12px 10px;
+    --playground-padding-top: 12px;
+    height: 320px;
+    font-size: 0.85rem;
+  }
+
+  .playground__gutter {
+    min-width: 2.6em;
+    padding: var(--playground-padding-top) 8px 48px 8px;
+  }
+
+  .playground__shortcut {
+    display: none;
+  }
+}
+
 .assignment-page {
   max-width: 920px;
 }
@@ -2861,6 +3162,7 @@ html {
   .preview-indicator,
   .admin-form,
   .copy-code__copy,
+  .playground,
   .exercise-progress,
   .exercise-task__check,
   .exercise-task__status,
