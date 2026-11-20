@@ -2,15 +2,54 @@
 // Source files live next to the other exercise starters:
 //   exercises/exercise-XX/playground/task_YY.{sk,en}.py      starter code (required)
 //   exercises/exercise-XX/playground/solution_YY.{sk,en}.py  sample solution (optional)
-// Keeping them as real .py files means `npm run validate` checks their syntax.
+//   exercises/exercise-XX/playground/workspace.json          test files for the editor (optional)
+// Keeping them as real .py files means `npm run validate` checks and runs them.
+//
+// workspace.json lists paths relative to exercises/exercise-XX/ that are copied into
+// the editor's working directory before every run, e.g. { "copy": ["subory"] }.
+// The same test data is used by the starter ZIP, the editor and the validation.
 
 import type { LocalizedString } from "@shared/i18n";
+
+type WorkspaceConfig = { copy?: string[] };
 
 const sourceFiles = import.meta.glob<string>("../../../../exercises/*/playground/*.py", {
   query: "?raw",
   import: "default",
   eager: true
 });
+
+const workspaceConfigs = import.meta.glob<WorkspaceConfig>("../../../../exercises/*/playground/workspace.json", {
+  import: "default",
+  eager: true
+});
+
+// Test data must be text; dot files such as .gitkeep keep empty directories.
+const exerciseFiles = import.meta.glob<string>(["../../../../exercises/*/**/*", "../../../../exercises/*/**/.*"], {
+  query: "?raw",
+  import: "default",
+  eager: true
+});
+
+/** Returns the files copied into the editor's working directory: relative path -> content. */
+export function getPlaygroundWorkspace(exercise: string): Record<string, string> {
+  const exerciseRoot = `/exercises/exercise-${exercise}/`;
+  const config = Object.entries(workspaceConfigs).find(([path]) => path.endsWith(`${exerciseRoot}playground/workspace.json`))?.[1];
+  const files: Record<string, string> = {};
+
+  for (const entry of config?.copy ?? []) {
+    const prefix = `${exerciseRoot}${entry.replace(/\/$/, "")}`;
+    const matches = Object.entries(exerciseFiles).filter(([path]) => path.endsWith(prefix) || path.includes(`${prefix}/`));
+    if (matches.length === 0) throw new Error(`workspace.json cvičenia ${exercise} odkazuje na neexistujúcu cestu: ${entry}`);
+
+    for (const [path, content] of matches) {
+      const relativePath = path.slice(path.indexOf(exerciseRoot) + exerciseRoot.length);
+      files[relativePath] = content.replace(/\r\n/g, "\n");
+    }
+  }
+
+  return files;
+}
 
 function readFile(exercise: string, fileName: string) {
   const suffix = `/exercises/exercise-${exercise}/playground/${fileName}`;

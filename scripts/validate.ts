@@ -173,6 +173,8 @@ function validatePythonExampleFiles() {
 
 // Code of the in-browser editors (exercises/*/playground/) is shown to students as runnable,
 // so starters and sample solutions must not only parse but also run without an exception.
+// Like the editor, every file runs in a fresh working directory with the test files
+// listed in playground/workspace.json.
 function validatePlaygroundFiles(python: PythonCommand) {
   const exercisesRoot = path.join(process.cwd(), "exercises");
   if (!fs.existsSync(exercisesRoot)) return;
@@ -180,21 +182,53 @@ function validatePlaygroundFiles(python: PythonCommand) {
   for (const entry of fs.readdirSync(exercisesRoot, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
 
-    for (const filePath of findFiles(path.join(exercisesRoot, entry.name, "playground"), ".py")) {
-      const result = spawnSync(python.command, [...python.args, "-I", filePath], {
-        cwd: os.tmpdir(),
-        encoding: "utf8",
-        timeout: 10000,
-        env: { ...process.env, PYTHONIOENCODING: "utf-8" }
-      });
+    const exerciseDir = path.join(exercisesRoot, entry.name);
+    const playgroundDir = path.join(exerciseDir, "playground");
+    const workspacePaths = readWorkspaceConfig(playgroundDir);
 
-      if (result.error) {
-        errors.push(`${filePath}: spustenie zlyhalo (${result.error.message})`);
-      } else if (result.status !== 0) {
-        errors.push(`${filePath}: kód editora skončil chybou\n${result.stderr || result.stdout}`);
+    for (const filePath of findFiles(playgroundDir, ".py")) {
+      const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "playground-"));
+      try {
+        for (const relativePath of workspacePaths) {
+          const source = path.join(exerciseDir, relativePath);
+          if (!fs.existsSync(source)) {
+            errors.push(`${playgroundDir}: workspace.json odkazuje na neexistujúcu cestu ${relativePath}`);
+            continue;
+          }
+          fs.cpSync(source, path.join(workDir, relativePath), { recursive: true });
+        }
+
+        // -I isolates the run from the project; -X utf8 keeps Unicode output working on Windows consoles.
+        const result = spawnSync(python.command, [...python.args, "-I", "-X", "utf8", filePath], {
+          cwd: workDir,
+          encoding: "utf8",
+          timeout: 10000
+        });
+
+        if (result.error) {
+          errors.push(`${filePath}: spustenie zlyhalo (${result.error.message})`);
+        } else if (result.status !== 0) {
+          errors.push(`${filePath}: kód editora skončil chybou\n${result.stderr || result.stdout}`);
+        }
+      } finally {
+        fs.rmSync(workDir, { recursive: true, force: true });
       }
     }
   }
+}
+
+function readWorkspaceConfig(playgroundDir: string): string[] {
+  const configPath = path.join(playgroundDir, "workspace.json");
+  if (!fs.existsSync(configPath)) return [];
+
+  try {
+    const config = JSON.parse(fs.readFileSync(configPath, "utf8")) as { copy?: unknown };
+    if (Array.isArray(config.copy) && config.copy.every((item) => typeof item === "string")) return config.copy;
+    errors.push(`${configPath}: "copy" musí byť zoznam relatívnych ciest`);
+  } catch (error) {
+    errors.push(`${configPath}: neplatný JSON (${error instanceof Error ? error.message : String(error)})`);
+  }
+  return [];
 }
 
 function resolvePython(): PythonCommand | undefined {

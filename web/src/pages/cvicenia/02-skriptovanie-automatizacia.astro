@@ -1,6 +1,7 @@
 ---
 import { getExerciseBySlug } from "@shared/exercises";
 import LocalizedText from "../../components/LocalizedText.astro";
+import PythonPlayground from "../../components/PythonPlayground.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 const exercise = getExerciseBySlug("02-skriptovanie-automatizacia");
@@ -45,6 +46,18 @@ const descriptionEn = exercise.translations?.en?.description ?? exercise.descrip
           en="Before tasks that modify files, create a clean copy of subory/. Each task describes required behaviour; design the implementation yourself using the lecture and documentation."
         />
       </p>
+      <p>
+        <LocalizedText
+          sk="Každá úloha má na konci Python online editor, do ktorého píšete riešenie a spúšťate ho priamo na stránke. Beží v prehliadači cez Pyodide, teda CPython skompilovaný do WebAssembly, a nič sa neodosiela na server. Prvé spustenie stiahne interpreter, preto chvíľu trvá. Rozpracovaný kód sa ukladá iba v tomto prehliadači. Editor slúži na skúšanie; odovzdávajú sa vlastné .py súbory."
+          en="Each task ends with an online Python editor where you write your solution and run it directly on the page. It runs in the browser through Pyodide, which is CPython compiled to WebAssembly, and nothing is sent to a server. The first run downloads the interpreter, so it takes a moment. Your draft code is stored only in this browser. The editor is for experimenting; you still submit your own .py files."
+        />
+      </p>
+      <p>
+        <LocalizedText
+          sk={`Editor pracuje s vlastnou kópiou priečinka subory/ vo virtuálnom súborovom systéme prehliadača. Pred každým spustením sa obnoví do pôvodného stavu, takže presuny v editore nemenia súbory na vašom počítači. Príkazový riadok v editore nie je: príkazu python organizer.py subory --vykonat zodpovedá volanie parse_args(["subory", "--vykonat"]).`}
+          en={`The editor works with its own copy of subory/ in the browser's virtual file system. It is restored to its original state before every run, so moves in the editor do not change files on your computer. The editor has no command line: the command python organizer.py subory --vykonat corresponds to the call parse_args(["subory", "--vykonat"]).`}
+        />
+      </p>
     </section>
 
     <section class="worksheet-section">
@@ -73,6 +86,7 @@ report.pdf     súbor      .pdf
 poznamky.txt   súbor      .txt
 README         súbor      bez prípony
 podklady       priečinok  -`}</code></pre>
+      <PythonPlayground exercise="02" task="01" />
     </section>
 
     <section class="worksheet-task">
@@ -90,6 +104,7 @@ podklady       priečinok  -`}</code></pre>
 report.pdf -> pdf
 poznamky.txt -> txt
 README -> bez_pripony`}</code></pre>
+      <PythonPlayground exercise="02" task="02" />
     </section>
 
     <section class="worksheet-task">
@@ -107,6 +122,7 @@ README -> bez_pripony`}</code></pre>
 PLAN: report.pdf -> pdf/report.pdf
 PLAN: poznamky.txt -> txt/poznamky.txt
 PLAN: README -> bez_pripony/README`}</code></pre>
+      <PythonPlayground exercise="02" task="03" />
     </section>
 
     <section class="worksheet-task">
@@ -122,6 +138,7 @@ PLAN: README -> bez_pripony/README`}</code></pre>
       </div>
       <pre class="expected-output"><code>{`Počet naplánovaných súborov: 4
 podklady/archiv.zip sa vo výstupe nenachádza`}</code></pre>
+      <PythonPlayground exercise="02" task="04" />
     </section>
 
     <section class="worksheet-task">
@@ -136,6 +153,7 @@ podklady/archiv.zip sa vo výstupe nenachádza`}</code></pre>
       <pre class="worksheet-code"><code>{`python organizer.py neexistuje
 python organizer.py subory/report.pdf`}</code></pre>
       <pre class="expected-output"><code>{`CHYBA: vstup nie je existujúci priečinok: neexistuje`}</code></pre>
+      <PythonPlayground exercise="02" task="05" />
     </section>
 
     <section class="worksheet-task">
@@ -153,6 +171,7 @@ python organizer.py subory/report.pdf`}</code></pre>
 PLAN: report.pdf -> pdf/report.pdf
 PLAN: poznamky.txt -> txt/poznamky.txt
 PLAN: README -> bez_pripony/README`}</code></pre>
+      <PythonPlayground exercise="02" task="06" />
     </section>
 
     <section class="worksheet-task">
@@ -167,6 +186,7 @@ PLAN: README -> bez_pripony/README`}</code></pre>
         <p>If even one file changes or a new directory appears without explicit confirmation, the task is not complete.</p>
       </div>
       <pre class="worksheet-code"><code>{`python organizer.py subory`}</code></pre>
+      <PythonPlayground exercise="02" task="07" />
     </section>
 
     <section class="worksheet-task">
@@ -186,6 +206,7 @@ PLAN: README -> bez_pripony/README`}</code></pre>
 ├── pdf/report.pdf
 ├── txt/poznamky.txt
 └── podklady/`}</code></pre>
+      <PythonPlayground exercise="02" task="08" />
     </section>
 
     <section class="worksheet-task">
@@ -202,6 +223,7 @@ PLAN: README -> bez_pripony/README`}</code></pre>
       <pre class="worksheet-code"><code>{`python organizer.py subory
 python organizer.py subory --vykonat
 python organizer.py`}</code></pre>
+      <PythonPlayground exercise="02" task="09" />
     </section>
 
     <section class="worksheet-task">
@@ -225,6 +247,7 @@ bez_pripony: 1
 jpg: 1
 pdf: 1
 txt: 1`}</code></pre>
+      <PythonPlayground exercise="02" task="10" />
     </section>
 
     <section class="worksheet-section">

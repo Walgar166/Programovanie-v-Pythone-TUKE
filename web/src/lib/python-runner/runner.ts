@@ -47,7 +47,13 @@ class PythonRunner extends EventTarget {
     void this.ensureReady().catch(() => undefined);
   }
 
-  async run(owner: string, code: string, inputMessage: string, handlers: RunHandlers): Promise<RunResult> {
+  async run(
+    owner: string,
+    code: string,
+    inputMessage: string,
+    files: Record<string, string>,
+    handlers: RunHandlers
+  ): Promise<RunResult> {
     if (this.activeRun) return { status: "unavailable", message: "busy" };
 
     try {
@@ -62,7 +68,7 @@ class PythonRunner extends EventTarget {
       const id = this.nextRunId++;
       this.activeRun = { id, owner, handlers, resolve };
       this.setState("running");
-      this.send({ type: "run", id, code, inputMessage });
+      this.send({ type: "run", id, code, inputMessage, files });
     });
   }
 

@@ -3,8 +3,9 @@
 // Usage inside a worksheet task: <PythonPlayground exercise="01" task="03" />
 // Starter code: exercises/exercise-XX/playground/task_YY.{sk,en}.py
 // Optional solution (adds the "Show solution" button): solution_YY.{sk,en}.py
+// Optional test files for the working directory: playground/workspace.json
 import { highlightPythonLines } from "../lib/python-runner/python-syntax";
-import { getPlaygroundSolution, getPlaygroundStarter } from "../lib/python-runner/sources";
+import { getPlaygroundSolution, getPlaygroundStarter, getPlaygroundWorkspace } from "../lib/python-runner/sources";
 import CopyCodeBlock from "./CopyCodeBlock.astro";
 import LocalizedText from "./LocalizedText.astro";
 
@@ -16,6 +17,7 @@ type Props = {
 const { exercise, task } = Astro.props;
 const starter = getPlaygroundStarter(exercise, task);
 const solution = getPlaygroundSolution(exercise, task);
+const workspace = getPlaygroundWorkspace(exercise);
 const id = `exercise-${exercise}-task-${task}`;
 ---
 
@@ -91,6 +93,7 @@ const id = `exercise-${exercise}-task-${task}`;
   }
 
   <script type="application/json" data-playground-starter set:html={JSON.stringify(starter)}></script>
+  <script type="application/json" data-playground-workspace set:html={JSON.stringify(workspace)}></script>
 </div>
 
 <script>
@@ -229,6 +232,8 @@ const id = `exercise-${exercise}-task-${task}`;
     const owner = root.dataset.playgroundId ?? "";
     const storageKey = root.dataset.storageKey ?? "";
     const starter = JSON.parse(starterSource.textContent ?? "{}") as Record<Language, string>;
+    const workspaceSource = root.querySelector<HTMLScriptElement>("[data-playground-workspace]");
+    const workspace = JSON.parse(workspaceSource?.textContent || "{}") as Record<string, string>;
     const isStarter = (code: string) => code === starter.sk || code === starter.en;
     let saveTimer: number | undefined;
     let escapePressed = false;
@@ -320,7 +325,7 @@ const id = `exercise-${exercise}-task-${task}`;
       setTranslated(status, runner.state === "ready" ? "playground.running" : "playground.loading");
       syncButtons();
 
-      const result = await runner.run(owner, editor.value, t("playground.inputUnsupported"), {
+      const result = await runner.run(owner, editor.value, t("playground.inputUnsupported"), workspace, {
         onOutput: appendOutput,
         onTruncated: () => appendNote("playground.truncated")
       });

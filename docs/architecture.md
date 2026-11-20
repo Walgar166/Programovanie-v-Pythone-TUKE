@@ -40,6 +40,7 @@ presentations/01-uvod-ku-pythonu.sk.pptx
 
 ```text
 exercises/exercise-XX/playground/task_YY.sk.py / .en.py   začiatočný kód (overuje ho npm run validate)
+exercises/exercise-XX/playground/workspace.json           voliteľné testovacie súbory pre pracovný priečinok
   -> web/src/lib/python-runner/sources.ts                  načíta ich pri builde
   -> web/src/components/PythonPlayground.astro             editor, tlačidlá, výstup
   -> web/src/lib/python-runner/runner.ts                   jeden zdieľaný interpreter na stránku
@@ -58,6 +59,8 @@ Rozhodnutia:
 - Interpreter beží vo Web Workeri, aby nekonečný cyklus nezamrazil stránku. Tlačidlo „Zastaviť“ worker ukončí a ďalšie spustenie ho vytvorí znova. Prerušenie cez `SharedArrayBuffer` by vyžadovalo COOP/COEP hlavičky, ktoré GitHub Pages nenastaví.
 - Každé spustenie má nový menný priestor `__main__`, takže úlohy sa navzájom neovplyvňujú a funguje vzor `if __name__ == "__main__":`.
 - `input()` nie je podporovaný; vstupné dáta sú priamo v kóde úlohy.
+- Program beží v pracovnom priečinku virtuálneho súborového systému Pyodide (`/home/pyodide/workspace`), ktorý sa pred každým spustením vytvorí nanovo. Ak cvičenie pracuje so súbormi, `playground/workspace.json` určí, ktoré cesty z `exercises/exercise-XX/` sa doň skopírujú, napr. `{ "copy": ["subory"] }` v Cvičení 02. Ide o tie isté testovacie dáta ako v starter ZIP, presuny v editore nemenia súbory na disku študenta a validácia spúšťa kód editora s rovnakou kópiou.
+- Príkazový riadok v editore nie je. Úlohy s `argparse` volajú `parse_args()` so zoznamom argumentov, napr. `parse_args(["subory", "--vykonat"])`.
 - Editor vie zobraziť vzorové riešenie tlačidlom „Zobraziť riešenie“, ak v `playground/` existuje `solution_YY.{sk,en}.py`. Momentálne je to vypnuté: riešenia Cvičenia 01 sú iba lokálne v neverejnom `solutions/exercise-01/` (ignorované Gitom), takže sa tlačidlo nezobrazí. Zapnúť sa dá presunutím týchto súborov späť do `playground/`, ak to vyučujúci schváli.
 - Rozpracovaný kód sa ukladá iba do `localStorage` (`python-course.exercise.XX.task.YY.code`). Nezmenený začiatočný kód sa pri prepnutí jazyka prepne na druhú jazykovú verziu.
 

@@ -30,18 +30,39 @@ const scope = self as unknown as WorkerScope;
 
 // Runs one student program in a fresh `__main__` namespace and prints the
 // traceback without the frame of this helper, so the output looks like `python main.py`.
+// Before every run the working directory of Pyodide's in-memory file system is
+// recreated from the exercise's test files, so programs that move or create files
+// always start from the same state and never touch the student's real disk.
 const RUN_HELPER = `
+import json
 import linecache
+import os
+import shutil
 import sys
 import traceback
 
 FILENAME = "main.py"
+WORKSPACE = "/home/pyodide/workspace"
 
 
-def _course_run(source, input_message):
+def _prepare_workspace(files_json):
+    os.chdir("/")
+    shutil.rmtree(WORKSPACE, ignore_errors=True)
+    os.makedirs(WORKSPACE)
+    for relative_path, content in json.loads(files_json).items():
+        path = os.path.join(WORKSPACE, relative_path)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as file:
+            file.write(content)
+    os.chdir(WORKSPACE)
+    sys.argv = [FILENAME]
+
+
+def _course_run(source, input_message, files_json):
     def _input(prompt=""):
         raise RuntimeError(input_message)
 
+    _prepare_workspace(files_json)
     # Lets tracebacks show the offending source lines, as with a real file.
     linecache.cache[FILENAME] = (len(source), None, source.splitlines(True), FILENAME)
     namespace = {"__name__": "__main__", "input": _input}
@@ -49,10 +70,12 @@ def _course_run(source, input_message):
         code = compile(source, FILENAME, "exec")
         exec(code, namespace)
     except SystemExit as error:
+        # Same as the python command: a text code is printed, a non-zero number only fails the run.
         sys.stdout.flush()
-        if error.code in (None, 0):
+        if error.code is None or error.code == 0:
             return True
-        print(f"SystemExit: {error.code}", file=sys.stderr)
+        if not isinstance(error.code, int):
+            print(error.code, file=sys.stderr)
         return False
     except BaseException as error:
         sys.stdout.flush()
@@ -117,7 +140,7 @@ async function init(indexURL: string) {
   }
 }
 
-function run(id: number, code: string, inputMessage: string) {
+function run(id: number, code: string, inputMessage: string, files: Record<string, string>) {
   if (!runProgram) {
     post({ type: "done", id, ok: false });
     return;
@@ -129,7 +152,7 @@ function run(id: number, code: string, inputMessage: string) {
 
   let ok = false;
   try {
-    ok = runProgram(code, inputMessage) === true;
+    ok = runProgram(code, inputMessage, JSON.stringify(files)) === true;
   } catch (error) {
     // Errors are normally printed by the Python helper; this is a last-resort fallback.
     post({ type: "output", id, stream: "stderr", text: `${error instanceof Error ? error.message : String(error)}\n` });
@@ -141,5 +164,5 @@ function run(id: number, code: string, inputMessage: string) {
 scope.addEventListener("message", (event) => {
   const message = event.data;
   if (message.type === "init") void init(message.indexURL);
-  if (message.type === "run") run(message.id, message.code, message.inputMessage);
+  if (message.type === "run") run(message.id, message.code, message.inputMessage, message.files);
 });

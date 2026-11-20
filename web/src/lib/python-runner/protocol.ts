@@ -2,7 +2,14 @@
 
 export type RunnerRequest =
   | { type: "init"; indexURL: string }
-  | { type: "run"; id: number; code: string; inputMessage: string };
+  | {
+      type: "run";
+      id: number;
+      code: string;
+      inputMessage: string;
+      /** Test files recreated in the working directory before the run: relative path -> text content. */
+      files: Record<string, string>;
+    };
 
 export type RunnerResponse =
   | { type: "ready"; pythonVersion: string }
